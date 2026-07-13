@@ -1,0 +1,62 @@
+import pandas as pd
+import os
+
+#Setup (r" converts to war string, telling Python to ignore backslash characters)
+input_file = r"C:\Users\mikeo\OneDrive\Desktop\Marissa Work\Cartwright\Cartwright Elem AASA 2025.xlsx"
+teacher_column = "Testing Group"
+output_folder = r"C:\Users\mikeo\OneDrive\Desktop\Marissa Work\Python" #location of new folder
+#Google Drive: output_folder = r"G:\My Drive\Python Practice"
+
+#Create output folder if it does not exist. Otherwise, skips this step
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+    print(f"Created directory: {output_folder}")
+
+#Read the master excel sheet
+print("Reading the master excel file")
+df = pd.read_excel(input_file)   #pd is pandas library
+
+#clean column names of spaces
+df.columns = df.columns.str.strip()
+
+#check if column exists to avoid errors
+if teacher_column not in df.columns:
+    raise ValueError(
+        f"Column {teacher_column} not found. Available columns: {list(df.columns)}"
+    )
+
+#group data by teacher column and loop through each group
+print("splitting data by teacher")
+
+#teacher_name variable holds string name of current teacher. Will use this to name file.
+#group_data variable holds actual spreadsheet rows for that teacher. Will use to populate contents of new excel file.
+#for loop assigns 2 pieces of info to 2 temp variables
+#groupby scans column and groups rows based on teacher name, temp slices into sub-tables
+for teacher_name, group_data in df.groupby(teacher_column):
+
+    # clean teacher names of characters that system doesn't allow (*,:,\,/)
+    # 1. Turn the name into normal text and start with an empty string
+    teacher_str = str(teacher_name)
+    clean_teacher_name = ""
+
+    # 2. Look at each character in the name one by one
+    for character in teacher_str:
+        # 3. Check if the character is a letter, number, space, underscore, or hyphen
+        if character.isalnum() or character in (" ", "_", "-"):
+            # 4. If it is safe, glue it to our clean name string
+            clean_teacher_name = clean_teacher_name + character
+
+    # 5. Remove any accidental blank spaces from the very front or back
+    clean_teacher_name = clean_teacher_name.strip()
+
+    # Define the new file name and path
+    file_name = f"{clean_teacher_name}_AASA 2025 data.xlsx"
+    file_path = os.path.join(output_folder, file_name)
+
+    # Save the filtered group data to its own Excel file
+    group_data.to_excel(file_path, index=False)
+    print(f"Saved: {file_path}")
+
+print("\n🎉 Success! All individual spreadsheets are ready.")
+
+
